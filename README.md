@@ -1,2 +1,3 @@
 # b2filt
-Filter for output of B2 build tool from boost.org
+
+Filter for output of B2 build tool from boost.org.

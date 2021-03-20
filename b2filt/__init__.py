@@ -35,7 +35,7 @@ def find_b2():
     while wd.exists():
         p = wd / "b2"
         if p.exists():
-            return str(p)
+            return f"./{p}"
         wd = wd / ".."
     return "b2"
 
