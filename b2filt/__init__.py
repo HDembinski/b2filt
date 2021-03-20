@@ -50,21 +50,30 @@ def main():
         bufsize=1,
     )
     nmax = 0
+    skip = False
+    first_error_line = True
     try:
         for line in p.stdout:
+            if line == "====== BEGIN OUTPUT ======\n":
+                continue
+            if line == "====== END OUTPUT ======\n":
+                skip = True
             if line.startswith("..."):
+                skip = False
                 continue
             if line.startswith("link.mklink"):
+                skip = False
                 continue
             try:
                 label, path = line.split()
                 if "archive" in label:
+                    skip = False
                     continue
                 path = PurePath(PurePath(path).stem)
                 short = path.parts[-1]
                 s = short_label(label)
-                if s is None:
-                    continue
+                skip = False
+                first_error_line = True
                 s = f"\r{s} {short}"
                 if nmax == 0:
                     write("\n")
@@ -73,10 +82,11 @@ def main():
                 flush()
                 write(s)
             except ValueError:
-                if nmax == 0:
+                if first_error_line:
+                    write("\n")
+                    first_error_line = False
+                if not skip:
                     write(line)
-                else:
-                    write(f"\n{line}")
             flush()
         dt = time.monotonic() - t_start
         if nmax:
