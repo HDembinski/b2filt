@@ -31,13 +31,12 @@ def short_label(label):
 
 
 def find_b2():
-    cwd = Path()
-    while cwd:
-        print(cwd)
-        p = cwd / "b2"
+    wd = Path()
+    while wd.exists():
+        p = wd / "b2"
         if p.exists():
-            return p
-        cwd = cwd.parent
+            return str(p)
+        wd = wd / ".."
     return "b2"
 
 
@@ -67,8 +66,10 @@ def main():
                 if s is None:
                     continue
                 s = f"\r{s} {short}"
+                if nmax == 0:
+                    write("\n")
                 nmax = max(len(s), nmax)
-                write("\r" + " " * 1000)  # clear line
+                write("\r" + " " * (nmax))  # clear line
                 flush()
                 write(s)
             except ValueError:
