@@ -20,11 +20,11 @@ white = "\x1b[37m"
 
 def short_label(label):
     if "compile" in label:
-        return f"{red}C{reset}"
+        return f"{magenta}C{reset}"
     elif "link" in label:
         return f"{yellow}L{reset}"
     elif "passed" in label:
-        return f"{green}+{reset}"
+        return f"{green}✓{reset}"
     elif "testing" in label or "capture" in label:
         return f"{blue}T{reset}"
     raise ValueError(label)
