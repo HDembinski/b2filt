@@ -3,6 +3,7 @@ import subprocess as subp
 import sys
 from pathlib import PurePath, Path
 import time
+import re
 
 write = sys.stdout.write
 flush = sys.stdout.flush
@@ -59,9 +60,11 @@ def main():
     nmax = 0
     skip = False
     first_error_line = True
+    nerror = 0
     try:
         for line in p.stdout:
             if line == "====== BEGIN OUTPUT ======\n":
+                nerror += 1
                 continue
             if line == "====== END OUTPUT ======\n":
                 skip = True
@@ -97,4 +100,6 @@ def main():
             write(f"\r{int(dt / 60):02}:{int(dt % 60):02}\n")
     except KeyboardInterrupt:
         p.kill()
+        sys.exit(2)
+    if nerror:
         sys.exit(1)
