@@ -90,7 +90,9 @@ def main():
             flush()
         dt = time.monotonic() - t_start
         if nmax:
-            write(f"\n{int(dt / 60):02}:{int(dt % 60):02}\n")
+            write("\r" + " " * (nmax))  # clear line
+            flush()
+            write(f"\r{int(dt / 60):02}:{int(dt % 60):02}\n")
     except KeyboardInterrupt:
         p.kill()
         raise SystemExit
