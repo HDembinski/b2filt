@@ -91,9 +91,9 @@ def main():
                 if not skip:
                     write(line)
             flush()
-        dt = time.monotonic() - t_start
         if nmax:
             clear_line(nmax)
+            dt = time.monotonic() - t_start
             write(f"\r{int(dt / 60):02}:{int(dt % 60):02}\n")
     except KeyboardInterrupt:
         p.kill()
