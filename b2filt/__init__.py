@@ -27,7 +27,14 @@ def short_label(label):
         return f"{green}✓{reset}"
     elif "testing" in label or "capture" in label:
         return f"{blue}T{reset}"
+    elif "archive" in label:
+        return None
     raise ValueError(label)
+
+
+def clear_line(nmax):
+    write("\r" + " " * (nmax))  # clear line
+    flush()
 
 
 def find_b2():
@@ -59,27 +66,23 @@ def main():
             if line == "====== END OUTPUT ======\n":
                 skip = True
             if line.startswith("..."):
-                skip = False
                 continue
             if line.startswith("link.mklink"):
-                skip = False
                 continue
             try:
                 label, path = line.split()
-                if "archive" in label:
-                    skip = False
-                    continue
                 path = PurePath(PurePath(path).stem)
                 short = path.parts[-1]
-                s = short_label(label)
+                slabel = short_label(label)
                 skip = False
                 first_error_line = True
-                s = f"\r{s} {short}"
+                if slabel is None:
+                    continue
+                s = f"\r{slabel} {short}"
                 if nmax == 0:
                     write("\n")
                 nmax = max(len(s), nmax)
-                write("\r" + " " * (nmax))  # clear line
-                flush()
+                clear_line(nmax)
                 write(s)
             except ValueError:
                 if first_error_line:
@@ -90,9 +93,8 @@ def main():
             flush()
         dt = time.monotonic() - t_start
         if nmax:
-            write("\r" + " " * (nmax))  # clear line
-            flush()
+            clear_line(nmax)
             write(f"\r{int(dt / 60):02}:{int(dt % 60):02}\n")
     except KeyboardInterrupt:
         p.kill()
-        raise SystemExit
+        sys.exit(1)
