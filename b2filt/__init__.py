@@ -1,9 +1,8 @@
 #!/usr/bin/python3
 import subprocess as subp
 import sys
-from pathlib import PurePath, Path
+from pathlib import Path
 import time
-import re
 
 write = sys.stdout.write
 flush = sys.stdout.flush
@@ -74,14 +73,15 @@ def main():
                 continue
             try:
                 label, path = line.split()
-                path = PurePath(PurePath(path).stem)
-                short = path.parts[-1]
+                path = Path(path)
+                if not path.exists():
+                    raise ValueError  # make it a non-match
                 slabel = short_label(label)
                 skip = False
                 first_error_line = True
                 if slabel is None:
                     continue
-                s = f"\r{slabel} {short}"
+                s = f"\r{slabel} {path.stem}"
                 if nmax == 0:
                     write("\n")
                 nmax = max(len(s), nmax)
