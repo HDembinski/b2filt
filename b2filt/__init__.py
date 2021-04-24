@@ -3,9 +3,25 @@ import subprocess as subp
 import sys
 from pathlib import Path
 import time
+import os
 
 write = sys.stdout.write
 flush = sys.stdout.flush
+
+
+class ErrorWriter:
+    def __init__(self):
+        self.lines = []
+
+    def __call__(self, line):
+        self.lines.append(line)
+
+    def show(self):
+        pager = os.environ.get("PAPER", "less")
+        subp.run([pager, "-"], input="".join(self.lines).encode())
+
+
+error = ErrorWriter()
 
 reset = "\x1b[0m"
 black = "\x1b[30m"
@@ -60,11 +76,18 @@ def main():
     skip = False
     first_error_line = True
     nerror = 0
+    found_compile_error = False
     try:
         for line in p.stdout:
             if line == "====== BEGIN OUTPUT ======\n":
                 nerror += 1
                 continue
+            if (
+                line.startswith("In file included from")
+                or "In instantiation of" in line
+            ):
+                nerror += 1
+                found_compile_error = True
             if line == "====== END OUTPUT ======\n":
                 skip = True
             if line.startswith("..."):
@@ -92,14 +115,19 @@ def main():
                     write("\n")
                     first_error_line = False
                 if not skip:
-                    write(line)
+                    if found_compile_error:
+                        error(line)
+                    else:
+                        write(line)
             flush()
-        if nmax:
+        if nerror == 0 and nmax:
             clear_line(nmax)
             dt = time.monotonic() - t_start
             write(f"\r{int(dt / 60):02}:{int(dt % 60):02}\n")
     except KeyboardInterrupt:
         p.kill()
         sys.exit(2)
+    if found_compile_error:
+        error.show()
     if nerror:
         sys.exit(1)
