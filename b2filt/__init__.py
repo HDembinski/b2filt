@@ -20,7 +20,7 @@ class ErrorWriter:
 
     def show(self):
         text = "".join(self.lines)
-        if len(self.lines) > 50:
+        if len(self.lines) > os.get_terminal_size().lines:
             pager = os.environ.get("PAPER", "less")
             subp.run([pager, "-"], input=text.encode())
         else:
