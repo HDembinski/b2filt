@@ -95,7 +95,12 @@ def main():
             if line == "====== END OUTPUT ======\n":
                 skip = True
             if line.startswith("...failed") and "compile" in line:
+                nerror += 1
                 compile_error = False
+                continue
+            if line.startswith("(failed-as-expected)"):
+                compile_error = False
+                error(line)
                 continue
             if line.startswith("..."):
                 continue
@@ -120,7 +125,6 @@ def main():
                         compile_error = True
                         label, path = previous_line.split()
                         error(f"{magenta}Compile error{reset} {path}\n")
-                        nerror += 1
                     if compile_error:
                         error(line)
                     else:
