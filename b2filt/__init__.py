@@ -1,78 +1,23 @@
 #!/usr/bin/python3
+from ._version import version as __version__
+from .errorwriter import ErrorWriter
+from .util import (
+    find_b2,
+    clear_line,
+    short_label,
+    write_and_flush,
+    is_compile,
+    colored_text,
+)
+import time
 import subprocess as subp
 import sys
 from pathlib import Path
-import time
-import os
-
-
-def write_and_flush(x):
-    sys.stdout.write(x)
-    sys.stdout.flush()
-
-
-class ErrorWriter:
-    def __init__(self):
-        self.lines = []
-
-    def __call__(self, line):
-        self.lines.append(line)
-
-    def show(self):
-        text = "".join(self.lines)
-        if len(self.lines) > os.get_terminal_size().lines:
-            pager = os.environ.get("PAPER", "less")
-            subp.run([pager, "-"], input=text.encode())
-        else:
-            write_and_flush(text)
-
-
-error = ErrorWriter()
-
-reset = "\x1b[0m"
-black = "\x1b[30m"
-red = "\x1b[31m"
-green = "\x1b[32m"
-yellow = "\x1b[33m"
-blue = "\x1b[34m"
-magenta = "\x1b[35m"
-cyan = "\x1b[36m"
-white = "\x1b[37m"
-
-
-def is_compile(x):
-    return "compile" in x
-
-
-def short_label(label):
-    if is_compile(label):
-        return f"{magenta}C{reset}"
-    elif "link" in label:
-        return f"{yellow}L{reset}"
-    elif "passed" in label:
-        return f"{green}✓{reset}"
-    elif "testing" in label or "capture" in label:
-        return f"{blue}T{reset}"
-    elif "archive" in label:
-        return None
-    raise ValueError(label)
-
-
-def clear_line(nmax):
-    write_and_flush("\r" + " " * (nmax) + "\r")  # clear line
-
-
-def find_b2():
-    wd = Path()
-    while wd.exists():
-        p = wd / "b2"
-        if p.exists():
-            return f"./{p}"
-        wd = wd / ".."
-    return "b2"
 
 
 def main():
+    error = ErrorWriter()
+
     t_start = time.monotonic()
     p = subp.Popen(
         [find_b2()] + sys.argv[1:],
@@ -124,7 +69,7 @@ def main():
                     if is_compile(previous_line):
                         compile_error = True
                         label, path = previous_line.split()
-                        error(f"{magenta}Compile error{reset} {path}\n")
+                        error(f"{colored_text('Compile error', 'm')} {path}\n")
                     if compile_error:
                         error(line)
                     else:
