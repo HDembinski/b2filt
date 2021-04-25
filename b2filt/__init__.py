@@ -3,9 +3,31 @@ import subprocess as subp
 import sys
 from pathlib import Path
 import time
+import os
 
-write = sys.stdout.write
-flush = sys.stdout.flush
+
+def write_and_flush(x):
+    sys.stdout.write(x)
+    sys.stdout.flush()
+
+
+class ErrorWriter:
+    def __init__(self):
+        self.lines = []
+
+    def __call__(self, line):
+        self.lines.append(line)
+
+    def show(self):
+        text = "".join(self.lines)
+        if len(self.lines) > os.get_terminal_size().lines:
+            pager = os.environ.get("PAPER", "less")
+            subp.run([pager, "-"], input=text.encode())
+        else:
+            write_and_flush(text)
+
+
+error = ErrorWriter()
 
 reset = "\x1b[0m"
 black = "\x1b[30m"
@@ -18,8 +40,12 @@ cyan = "\x1b[36m"
 white = "\x1b[37m"
 
 
+def is_compile(x):
+    return "compile" in x
+
+
 def short_label(label):
-    if "compile" in label:
+    if is_compile(label):
         return f"{magenta}C{reset}"
     elif "link" in label:
         return f"{yellow}L{reset}"
@@ -33,8 +59,7 @@ def short_label(label):
 
 
 def clear_line(nmax):
-    write("\r" + " " * (nmax))  # clear line
-    flush()
+    write_and_flush("\r" + " " * (nmax) + "\r")  # clear line
 
 
 def find_b2():
@@ -60,6 +85,8 @@ def main():
     skip = False
     first_error_line = True
     nerror = 0
+    previous_line = ""
+    compile_error = False
     try:
         for line in p.stdout:
             if line == "====== BEGIN OUTPUT ======\n":
@@ -67,37 +94,52 @@ def main():
                 continue
             if line == "====== END OUTPUT ======\n":
                 skip = True
+            if line.startswith("...failed") and "compile" in line:
+                nerror += 1
+                compile_error = False
+                continue
+            if line.startswith("(failed-as-expected)"):
+                compile_error = False
+                error(line)
+                continue
             if line.startswith("..."):
                 continue
             if line.startswith("link.mklink"):
                 continue
             try:
                 label, path = line.split()
-                path = Path(path)
-                if not path.exists():
-                    raise ValueError  # make it a non-match
                 slabel = short_label(label)
                 skip = False
                 first_error_line = True
                 if slabel is None:
                     continue
-                s = f"\r{slabel} {path.stem}"
+                s = f"\r{slabel} {Path(path).stem}"
                 if nmax == 0:
-                    write("\n")
+                    write_and_flush("\n")
                 nmax = max(len(s), nmax)
                 clear_line(nmax)
-                write(s)
+                write_and_flush(s)
             except ValueError:
-                if first_error_line:
-                    write("\n")
-                    first_error_line = False
                 if not skip:
-                    write(line)
-            flush()
-        if nmax:
-            clear_line(nmax)
+                    if is_compile(previous_line):
+                        compile_error = True
+                        label, path = previous_line.split()
+                        error(f"{magenta}Compile error{reset} {path}\n")
+                    if compile_error:
+                        error(line)
+                    else:
+                        if first_error_line:
+                            first_error_line = False
+                            write_and_flush("\n")
+                        write_and_flush(line)
+            previous_line = line
+
+        clear_line(nmax)
+        if nerror == 0 and nmax:
             dt = time.monotonic() - t_start
-            write(f"\r{int(dt / 60):02}:{int(dt % 60):02}\n")
+            write_and_flush(f"\r{int(dt / 60):02}:{int(dt % 60):02}\n")
+        error.show()
+
     except KeyboardInterrupt:
         p.kill()
         sys.exit(2)

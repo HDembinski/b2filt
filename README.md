@@ -17,7 +17,8 @@ Just replace any call to `b2` with `b2filt`. All command line options are forwar
 
 ## Features
 
-- Filters out all the uninteresting stuff, but shows errors verbatim.
-- Use the `b2` installed in your current Boost super project and fall back to the `b2` available in the PATH.
-- Displays the time it took to compile/run everything.
-- Designed to work well with `-jN`.
+- Filters out uninteresting stuff, but shows errors verbatim
+- Automatically shows long compilation error messages in pager at end of run
+- Works perfectly with `-jN`
+- Uses `b2` in your current Boost super project and falls back to `b2` available in PATH
+- Displays wall time it took to compile/run everything
