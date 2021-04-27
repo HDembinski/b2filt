@@ -1,5 +1,11 @@
-#!/usr/bin/python3
-from ._version import version as __version__
+"""
+b2filt is a filter for b2 output.
+
+See README.md on GitHub for details.
+"""
+
+__version__ = "0.2.1"
+
 from .errorwriter import ErrorWriter
 from .util import (
     find_b2,
@@ -16,6 +22,7 @@ from pathlib import Path
 
 
 def main():
+    """Run b2 and parse its output."""
     error = ErrorWriter()
 
     t_start = time.monotonic()

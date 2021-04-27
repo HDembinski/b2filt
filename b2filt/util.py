@@ -48,10 +48,10 @@ def clear_line(nmax):
 
 
 def find_b2():
-    wd = Path()
-    while wd.exists():
+    wd = Path().absolute()
+    while wd.parent != wd:
         p = wd / "b2"
         if p.exists():
-            return f"./{p}"
-        wd = wd / ".."
+            return p
+        wd = wd.parent
     return "b2"
