@@ -4,7 +4,7 @@ b2filt is a filter for b2 output.
 See README.md on GitHub for details.
 """
 
-__version__ = "0.2.1"
+__version__ = "0.2.2"
 
 from .errorwriter import ErrorWriter
 from .util import (
