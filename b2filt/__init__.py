@@ -59,9 +59,7 @@ def main():
             if line.startswith("link.mklink"):
                 continue
             try:
-                label, path, *rest = line.split()
-                if len(rest) > 0:
-                    raise ValueError
+                label, path = line.split()
                 slabel = short_label(label)
                 skip = False
                 first_error_line = True
@@ -76,9 +74,12 @@ def main():
             except ValueError:
                 if not skip:
                     if is_compile(previous_line):
-                        compile_error = True
-                        label, path = previous_line.split()
-                        error(f"{colored_text('Compile error', 'm')} {path}\n")
+                        label, path, *rest = previous_line.split()
+                        if len(rest):
+                            write_and_flush(line)
+                        else:                           
+                            compile_error = True
+                            error(f"{colored_text('Compile error', 'm')} {path}\n")
                     if compile_error:
                         error(line)
                     else:
