@@ -59,7 +59,9 @@ def main():
             if line.startswith("link.mklink"):
                 continue
             try:
-                label, path = line.split()
+                label, path, *rest = line.split()
+                if len(rest) > 0:
+                    raise ValueError
                 slabel = short_label(label)
                 skip = False
                 first_error_line = True
